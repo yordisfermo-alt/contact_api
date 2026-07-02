@@ -17,9 +17,10 @@ class ContactFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = fake('en_ES');
         return [
-            'name' => fake()->name(),
-            'phone_number' => fake()->unique()->numerify('3#########'),
+            'name' => $faker->name(),
+            'phone_number' => $faker->unique()->numerify('3#########'),
         ];
     }
 }
