@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ContactController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = Contact::all();
+        $contacts = Contact::where('user_id', $request->user()->id)->get();
 
         return response()->json([
-            'message' => 'Contacto obtenidos correctamente',
+            'message' => 'Contactos obtenidos correctamente',
             'data' => $contacts,
         ]);
         
@@ -36,11 +37,19 @@ class ContactController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'user_id' => ['required', 'exists:users,id'],
-            'phone_number' => ['nullable', 'string', 'max:255']
+            'phone_number' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('contacts', 'phone_number')
+                    ->where('user_id', $request->user()->id),
+            ],
         ]);
 
+        $data['user_id'] = $request->user()->id;
+
         $contact = Contact::create($data);
+
         return response()->json([
             'message' => 'Contacto creado correctamente',
             'data' => $contact,
@@ -50,8 +59,12 @@ class ContactController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Contact $contact)
+    public function show(Request $request, Contact $contact)
     {
+        if ($contact->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         return response()->json([
             'message' => 'Contacto obtenido correctamente',
             'data' => $contact,
@@ -71,13 +84,24 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact)
     {
+        if ($contact->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $data = $request->validate([
             'name' => ['sometimes','required', 'string', 'max:255'],
-            'user_id' => ['sometimes', 'required', 'exists:users,id'],
-            'phone_number' => ['nullable', 'string', 'max:255']
+            'phone_number' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('contacts', 'phone_number')
+                    ->where('user_id', $request->user()->id)
+                    ->ignore($contact->id),
+            ],
         ]);
 
         $contact->update($data);
+
         return response()->json([
             'message' => 'Contacto actualizado correctamente',
             'data' => $contact,
@@ -87,9 +111,14 @@ class ContactController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Contact $contact)
+    public function destroy(Request $request, Contact $contact)
     {
+        if ($contact->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $contact->delete();
+
         return response()->json([
             'message' => 'Contacto eliminado correctamente',
         ]);

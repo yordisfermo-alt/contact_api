@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -58,6 +59,28 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente',
+        ]);
+    }
+    public function update(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => ['sometimes', 'required', 'string', 'min:8'],
+        ]);
+
+        $user->update($data);
+
+        return response()->json([
+            'message' => 'Usuario actualizado correctamente',
+            'user' => $user,
         ]);
     }
 }
