@@ -12,7 +12,13 @@ class ContactController extends Controller
      */
     public function index()
     {
-        //
+        $contacts = Contact::all();
+
+        return response()->json([
+            'message' => 'Contacto obtenidos correctamente',
+            'data' => $contacts,
+        ]);
+        
     }
 
     /**
@@ -28,7 +34,17 @@ class ContactController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'user_id' => ['required', 'exists:users,id'],
+            'phone_number' => ['nullable', 'string', 'max:255']
+        ]);
+
+        $contact = Contact::create($data);
+        return response()->json([
+            'message' => 'Contacto creado correctamente',
+            'data' => $contact,
+        ]);
     }
 
     /**
@@ -36,7 +52,10 @@ class ContactController extends Controller
      */
     public function show(Contact $contact)
     {
-        //
+        return response()->json([
+            'message' => 'Contacto obtenido correctamente',
+            'data' => $contact,
+        ]);
     }
 
     /**
@@ -52,7 +71,17 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact)
     {
-        //
+        $data = $request->validate([
+            'name' => ['sometimes','required', 'string', 'max:255'],
+            'user_id' => ['sometimes', 'required', 'exists:users,id'],
+            'phone_number' => ['nullable', 'string', 'max:255']
+        ]);
+
+        $contact->update($data);
+        return response()->json([
+            'message' => 'Contacto actualizado correctamente',
+            'data' => $contact,
+        ]);
     }
 
     /**
@@ -60,6 +89,9 @@ class ContactController extends Controller
      */
     public function destroy(Contact $contact)
     {
-        //
+        $contact->delete();
+        return response()->json([
+            'message' => 'Contacto eliminado correctamente',
+        ]);
     }
 }
