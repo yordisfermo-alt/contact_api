@@ -13,7 +13,10 @@ class ContactController extends Controller
      */
     public function index(Request $request)
     {
-        $contacts = Contact::where('user_id', $request->user()->id)->get();
+        $perPage = min($request->integer('per_page', 5), 50);
+
+        $contacts = Contact::where('user_id', $request->user()->id)
+            ->paginate($perPage);
 
         return response()->json([
             'message' => 'Contactos obtenidos correctamente',
